@@ -1,0 +1,23 @@
+{
+  "name": "xmpp-rx",
+  "version": "1.0.0",
+  "description": "Simple rx-wrapper around the popular node-xmpp-client library.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steuerbot/xmpp-rx.git"
+  },
+  "author": "marc neumann",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/steuerbot/xmpp-rx/issues"
+  },
+  "homepage": "https://github.com/steuerbot/xmpp-rx#readme",
+  "dependencies": {
+     "rxjs": "^5.0.3",
+     "node-xmpp-client": "^3.1.3"
+  }
+}
