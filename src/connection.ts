@@ -23,7 +23,9 @@ export class Connection {
             password: password
         });
 
-        this.client.on('stanza', r => this.rawMessageSubject.next(r));
+        this.client.on('stanza', (r, v) => {
+            this.rawMessageSubject.next(r)
+        });
 
         this.client.connect();
 
@@ -31,7 +33,6 @@ export class Connection {
             this.client.on('online', () => {
                 obs.next('online');
                 obs.complete();
-                this.attachListeners();
             });
         });
     }

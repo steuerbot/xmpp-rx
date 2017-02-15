@@ -22,13 +22,14 @@ var Connection = (function () {
             jid: jid.toString(),
             password: password
         });
-        this.client.on('stanza', function (r) { return _this.rawMessageSubject.next(r); });
+        this.client.on('stanza', function (r, v) {
+            _this.rawMessageSubject.next(r);
+        });
         this.client.connect();
         return Observable_1.Observable.create(function (obs) {
             _this.client.on('online', function () {
                 obs.next('online');
                 obs.complete();
-                _this.attachListeners();
             });
         });
     };
