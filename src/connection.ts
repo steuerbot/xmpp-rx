@@ -1,7 +1,9 @@
-import {Client} from 'node-xmpp-client';
+import {Client, Stanza} from 'node-xmpp-client';
 import {Observable} from 'rxjs/Observable';
 import {Subject} from 'rxjs/Subject';
-import {JID} from './jid';
+import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/map';
+import {JID, MessageType, Message} from './models';
 
 /**
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
@@ -48,23 +50,38 @@ export class Connection {
         this.client.send(stanza);
     }
 
-    sendMessage(to: string, jid: string, body: string) {
+    /**
+     * Send a direct message/stanza.
+     *
+     * @param to jid of the recipient
+     * @param from jid of the sender
+     * @param body the message body
+     * @param messageType (optional) default is 'chat'
+     */
+    sendMessage(to: JID, from: JID, body: string, messageType?: MessageType) {
+        let type = messageType ? messageType : Message.chat;
         let reply = new Client.Stanza('message', {
-            to: to,
-            from: jid,
-            type: 'chat'
+            to: to.toString(),
+            from: from.toString(),
+            type: Message.chat
         });
         reply.c('body').t(body);
         this.client.send(reply);
     }
 
     getRawMessages(): Observable<any> {
-        return this.rawMessageSubject.asObservable();
+        return this.rawMessageSubject.map(toObject);
     }
 
-    getChatMessageStream(): Observable<any> {
-        return this.rawMessageSubject.asObservable();
+    getChatMessageStream(messageType?: MessageType): Observable<any> {
+        return this.rawMessageSubject.filter(r => isChatMessage(r, messageType)).map(toObject);
     }
 }
 
-const parseStanza = (r: any) => r.is('message') && r.attrs.type === 'chat';
+let isChatMessage = (r: Stanza, t: MessageType) => {
+    return r.is('message', '') && (!t || r.type === t);
+};
+
+let toObject = (r: Stanza) => {
+    // console.log(r);
+};

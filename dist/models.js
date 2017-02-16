@@ -1,4 +1,12 @@
 "use strict";
+var Message;
+(function (Message) {
+    Message.chat = 'chat';
+    Message.error = 'error';
+    Message.groupchat = 'groupchat';
+    Message.headline = 'headline';
+    Message.normal = 'normal';
+})(Message = exports.Message || (exports.Message = {}));
 class JID {
     constructor(user, domain, resource) {
         this.user = user;
@@ -16,4 +24,4 @@ class JID {
 }
 JID.DEFAULT_RESOURCE = 'node-xmpp-client';
 exports.JID = JID;
-//# sourceMappingURL=jid.js.map
+//# sourceMappingURL=models.js.map

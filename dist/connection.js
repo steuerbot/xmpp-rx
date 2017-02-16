@@ -1,12 +1,15 @@
 "use strict";
-var node_xmpp_client_1 = require("node-xmpp-client");
-var Observable_1 = require("rxjs/Observable");
-var Subject_1 = require("rxjs/Subject");
+const node_xmpp_client_1 = require("node-xmpp-client");
+const Observable_1 = require("rxjs/Observable");
+const Subject_1 = require("rxjs/Subject");
+require("rxjs/add/operator/filter");
+require("rxjs/add/operator/map");
+const models_1 = require("./models");
 /**
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
  */
-var Connection = (function () {
-    function Connection() {
+class Connection {
+    constructor() {
         this.rawMessageSubject = new Subject_1.Subject();
     }
     /**
@@ -16,49 +19,61 @@ var Connection = (function () {
      * @param password
      * @returns {Observable<string>} Observable which returns 'online' if the connection is successfully established.
      */
-    Connection.prototype.connect = function (jid, password) {
-        var _this = this;
+    connect(jid, password) {
         this.client = new node_xmpp_client_1.Client({
             jid: jid.toString(),
             password: password
         });
-        this.client.on('stanza', function (r, v) {
-            _this.rawMessageSubject.next(r);
+        this.client.on('stanza', (r, v) => {
+            this.rawMessageSubject.next(r);
         });
         this.client.connect();
-        return Observable_1.Observable.create(function (obs) {
-            _this.client.on('online', function () {
+        return Observable_1.Observable.create(obs => {
+            this.client.on('online', () => {
                 obs.next('online');
                 obs.complete();
             });
         });
-    };
-    Connection.prototype.disconnect = function () {
+    }
+    disconnect() {
         this.client.disconnect();
-    };
-    Connection.prototype.sendPresence = function (message) {
-        var stanza = new node_xmpp_client_1.Client.Stanza('presence', {})
+    }
+    sendPresence(message) {
+        let stanza = new node_xmpp_client_1.Client.Stanza('presence', {})
             .c('show').t('chat').up()
             .c('status').t(message);
         this.client.send(stanza);
-    };
-    Connection.prototype.sendMessage = function (to, jid, body) {
-        var reply = new node_xmpp_client_1.Client.Stanza('message', {
-            to: to,
-            from: jid,
-            type: 'chat'
+    }
+    /**
+     * Send a direct message/stanza.
+     *
+     * @param to jid of the recipient
+     * @param from jid of the sender
+     * @param body the message body
+     * @param messageType (optional) default is 'chat'
+     */
+    sendMessage(to, from, body, messageType) {
+        let type = messageType ? messageType : models_1.Message.chat;
+        let reply = new node_xmpp_client_1.Client.Stanza('message', {
+            to: to.toString(),
+            from: from.toString(),
+            type: models_1.Message.chat
         });
         reply.c('body').t(body);
         this.client.send(reply);
-    };
-    Connection.prototype.getRawMessages = function () {
-        return this.rawMessageSubject.asObservable();
-    };
-    Connection.prototype.getChatMessageStream = function () {
-        return this.rawMessageSubject.asObservable();
-    };
-    return Connection;
-}());
+    }
+    getRawMessages() {
+        return this.rawMessageSubject.map(toObject);
+    }
+    getChatMessageStream(messageType) {
+        return this.rawMessageSubject.filter(r => isChatMessage(r, messageType)).map(toObject);
+    }
+}
 exports.Connection = Connection;
-var parseStanza = function (r) { return r.is('message') && r.attrs.type === 'chat'; };
+let isChatMessage = (r, t) => {
+    return r.is('message', '') && (!t || r.type === t);
+};
+let toObject = (r) => {
+    // console.log(r);
+};
 //# sourceMappingURL=connection.js.map
