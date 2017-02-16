@@ -1,6 +1,6 @@
 {
-  "name": "xmpp-rx",
-  "version": "1.1.0",
+  "name": "@steuerbot/xmpp-rx",
+  "version": "1.1.1",
   "description": "Simple rx-wrapper around the popular node-xmpp-client library.",
   "main": "index.js",
   "scripts": {
