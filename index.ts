@@ -1,11 +1,9 @@
-import {Client} from 'node-xmpp-client';
+import {Component} from 'node-xmpp-component';
 
-/**
- * Created by marcneumann on 17.02.17.
- */
-console.log('hallo');
 console.log('hallo');
 
-let client = new Client({jid: 'marc@steuerbot.com', password: 'marc'});
-client.on('online', () => console.log('online'));
-client.connect();
+// let client = new Client({jid: 'marc@steuerbot.com', password: 'marc'});
+let component = new Component({jid: 'beta_bot.steuerbot.com', password: 'beta_bot', host: 'steuerbot.com', port: 5226});
+
+component.on('online', () => console.log('online'));
+
