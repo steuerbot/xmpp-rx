@@ -1,37 +1,64 @@
-import {Client} from 'node-xmpp-client';
 import {Observable} from 'rxjs/Observable';
 import {Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
-import {JID, MessageType, Message} from './models';
-import {Stanza} from '@xmpp/xml';
+import {JID, MessageType, Message} from '../../models';
+import {Element, Stanza, createStanza} from 'node-xmpp-core';
+import {EventEmitter} from 'events';
+import {Component} from 'node-xmpp-component';
+import {Client} from 'node-xmpp-client';
+
+export interface XmppClient extends EventEmitter {
+    send(stanza: Element): void;
+
+    // component methods
+    onStreamStart?(streamAttrs: any): void;
+    onStanza?(stanza: Element): void;
+    end?(): void;
+
+    // client methods
+    connect?(): void;
+    disconnect?(): void;
+}
 
 /**
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
  */
 export class Connection {
-    private client: Client;
-    private rawMessageSubject: Subject<any> = new Subject();
+    private connectionType: 'component' | 'client';
+    private rawMessageSubject: Subject<Stanza> = new Subject();
+
+    static createComponentConnection(component: Component) {
+        let con = new Connection(component);
+        con.setConnetionType('component');
+        con.connect();
+        return con;
+    }
+
+    static createClientConnection(client: Client) {
+        let con = new Connection(client);
+        con.setConnetionType('client');
+        return con;
+    }
+
+    private constructor(private client: XmppClient) {
+    };
 
     /**
      * Connect to the xmpp server.
      *
-     * @param jid
-     * @param password
      * @returns {Observable<string>} Observable which returns 'online' if the connection is successfully established.
      */
-    connect(jid: JID, password: string): Observable<string> {
-        this.client = new Client({
-            jid: jid.toString(),
-            password: password
-        });
+    connect(): Observable<string> {
 
         this.client.on('stanza', (r, v) => {
             this.rawMessageSubject.next(r)
         });
 
-        this.client.connect();
-
+        if (this.client.connect) {
+            this.client.connect();
+        }
+        
         return Observable.create(obs => {
             this.client.on('online', () => {
                 obs.next('online');
@@ -45,7 +72,7 @@ export class Connection {
     }
 
     sendPresence(message?: string) {
-        let stanza = new Client.Stanza('presence', {})
+        let stanza = createStanza('presence', {})
             .c('show').t('chat').up()
             .c('status').t(message);
         this.client.send(stanza);
@@ -61,7 +88,7 @@ export class Connection {
      */
     sendMessage(to: JID, from: JID, body: string, messageType?: MessageType) {
         let type = messageType ? messageType : Message.chat;
-        let reply = new Client.Stanza('message', {
+        let reply = createStanza('message', {
             to: to.toString(),
             from: from.toString(),
             type: Message.chat
@@ -76,6 +103,10 @@ export class Connection {
 
     getChatMessageStream(messageType?: MessageType): Observable<any> {
         return this.rawMessageSubject.filter(r => isChatMessage(r, messageType)).map(toObject);
+    }
+
+    private setConnetionType(type: 'client' | 'component'): void {
+        this.connectionType = type;
     }
 }
 
