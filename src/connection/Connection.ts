@@ -2,11 +2,23 @@ import {Observable} from 'rxjs/Observable';
 import {Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
-import {JID, MessageType, Message} from '../../models';
-import {Element, Stanza, createStanza} from 'node-xmpp-core';
+import 'rxjs/add/operator/first';
+import {MessageType, Message} from '../../models';
+import {Element, Stanza, createStanza, JID} from 'node-xmpp-core';
 import {EventEmitter} from 'events';
 import {Component} from 'node-xmpp-component';
 import {Client} from 'node-xmpp-client';
+import {IQ} from '@xmpp/xml';
+import {SimpleStanza} from './SimpleStanza';
+import {isNullOrUndefined} from 'util';
+
+export interface MessageFilter {
+    type?: string;
+    messageType?: string;
+    forwarded?: boolean;
+    composing?: boolean;
+    paused?: boolean;
+}
 
 export interface XmppClient extends EventEmitter {
     send(stanza: Element): void;
@@ -25,23 +37,37 @@ export interface XmppClient extends EventEmitter {
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
  */
 export class Connection {
+    public static readonly STATUS_ONLINE: string = 'online';
+    public static readonly STATUS_OFFLINE: string = 'offline';
+    public static readonly STATUS_CONNECT: string = 'connect';
+    public static readonly STATUS_RECONNECT: string = 'reconnect';
+    public static readonly STATUS_DISCONNECT: string = 'disconnect';
+    public static readonly STATUS_ERROR: string = 'error';
+
+    public static readonly TYPE_STANZA: string = 'stanza';
+    public static readonly TYPE_MESSAGE: string = 'message';
+
+    public static readonly MESSAGE_CHAT: string = 'chat';
+    public static readonly MESSAGE_GROUPCHAT: string = 'groupchat';
+
     private connectionType: 'component' | 'client';
-    private rawMessageSubject: Subject<Stanza> = new Subject();
+    private rawStanzaSubject: Subject<Stanza> = new Subject();
+    private statusSubject: Subject<string> = new Subject();
 
     static createComponentConnection(component: Component) {
         let con = new Connection(component);
-        con.setConnetionType('component');
-        con.connect();
+        con.connectionType = 'component';
         return con;
     }
 
     static createClientConnection(client: Client) {
         let con = new Connection(client);
-        con.setConnetionType('client');
+        con.connectionType = 'client';
         return con;
     }
 
-    private constructor(private client: XmppClient) {
+    constructor(private client: XmppClient) {
+        this.attachListeners();
     };
 
     /**
@@ -49,29 +75,22 @@ export class Connection {
      *
      * @returns {Observable<string>} Observable which returns 'online' if the connection is successfully established.
      */
-    connect(): Observable<string> {
-
-        this.client.on('stanza', (r, v) => {
-            this.rawMessageSubject.next(r)
-        });
-
+    public connect(): Observable<string> {
         if (this.client.connect) {
             this.client.connect();
         }
-        
-        return Observable.create(obs => {
-            this.client.on('online', () => {
-                obs.next('online');
-                obs.complete();
-            });
-        });
+        return this.statusSubject.filter(r => r === Connection.STATUS_ONLINE).first();
     }
 
-    disconnect() {
-        this.client.disconnect();
+    public disconnect() {
+        if (this.connectionType === 'client') {
+            this.client.disconnect();
+        } else {
+            this.client.end();
+        }
     }
 
-    sendPresence(message?: string) {
+    public sendPresence(message?: string) {
         let stanza = createStanza('presence', {})
             .c('show').t('chat').up()
             .c('status').t(message);
@@ -86,34 +105,64 @@ export class Connection {
      * @param body the message body
      * @param messageType (optional) default is 'chat'
      */
-    sendMessage(to: JID, from: JID, body: string, messageType?: MessageType) {
+    public sendMessage(to: JID, from: JID, body: string, messageType?: MessageType) {
         let type = messageType ? messageType : Message.chat;
         let reply = createStanza('message', {
             to: to.toString(),
             from: from.toString(),
-            type: Message.chat
+            type: type
         });
         reply.c('body').t(body);
         this.client.send(reply);
     }
 
-    getRawMessages(): Observable<any> {
-        return this.rawMessageSubject.map(toObject);
+    public enableCarbons(): void {
+        let iq = new IQ({id: 'enable1', type: 'set'}).c('enable', {xmlns: 'urn:xmpp:carbons:2'});
+        this.client.send(iq);
     }
 
-    getChatMessageStream(messageType?: MessageType): Observable<any> {
-        return this.rawMessageSubject.filter(r => isChatMessage(r, messageType)).map(toObject);
+    public disableCarbons(): void {
+        let iq = new IQ({id: 'disable1', type: 'set'}).c('disable', {xmlns: 'urn:xmpp:carbons:2'});
+        this.client.send(iq);
     }
 
-    private setConnetionType(type: 'client' | 'component'): void {
-        this.connectionType = type;
+    public getStatusStream(type?: string): Observable<any> {
+        return this.statusSubject.asObservable();
+    }
+
+    public getRawStanzaStream(filter?: MessageFilter): Observable<Stanza> {
+        return this.rawStanzaSubject
+            .filter(r => filterType(r, filter.type))
+            .filter(r => filterMessageType(r, filter.messageType));
+    }
+
+    public getSimpleStanzaStream(filter?: MessageFilter): Observable<SimpleStanza> {
+        return this.getRawStanzaStream(filter).map(toSimple)
+            .filter(r => filterForwarded(r, filter.forwarded))
+            .filter(r => filterComposing(r, filter.composing))
+            .filter(r => filterPaused(r, filter.paused));
+    }
+
+    /**
+     * Attaching all available listeners.
+     */
+    private attachListeners(): void {
+        this.client.on(Connection.TYPE_STANZA, (r) => this.rawStanzaSubject.next(r));
+
+        this.client.on(Connection.STATUS_ONLINE, () => this.statusSubject.next(Connection.STATUS_ONLINE));
+        this.client.on(Connection.STATUS_OFFLINE, () => this.statusSubject.next(Connection.STATUS_OFFLINE));
+        this.client.on(Connection.STATUS_CONNECT, () => this.statusSubject.next(Connection.STATUS_CONNECT));
+        this.client.on(Connection.STATUS_RECONNECT, () => this.statusSubject.next(Connection.STATUS_RECONNECT));
+        this.client.on(Connection.STATUS_DISCONNECT, () => this.statusSubject.next(Connection.STATUS_DISCONNECT));
+        this.client.on(Connection.STATUS_ERROR, () => this.statusSubject.next(Connection.STATUS_ERROR));
     }
 }
 
-let isChatMessage = (r: Stanza, t: MessageType) => {
-    return r.is('message', '') && (!t || r.type === t);
-};
+let filterType = (r: Stanza, t: string) => isNullOrUndefined(t) || r.is(t);
+let filterMessageType = (r: Stanza, t: string) => isNullOrUndefined(t) || r.type === t;
 
-let toObject = (r: Stanza) => {
-    // console.log(r);
-};
+let toSimple = (r: Stanza) => new SimpleStanza(r);
+let filterForwarded = (r: SimpleStanza, f: boolean) => isNullOrUndefined(f) || r.forwarded === f;
+let filterComposing = (r: SimpleStanza, f: boolean) => isNullOrUndefined(f) || r.composing === f;
+let filterPaused = (r: SimpleStanza, f: boolean) => isNullOrUndefined(f) || r.paused === f;
+

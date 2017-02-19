@@ -25,6 +25,6 @@ export class ConnectionBuilder {
 
     private static buildWithClientOptions(options: ClientOptions): Connection {
         let client = new Client(options);
-        return new Connection(client);
+        return Connection.createClientConnection(client);
     }
 }
