@@ -3,8 +3,7 @@ import {Component} from 'node-xmpp-component';
 import {Client} from 'node-xmpp-client';
 import {SimpleStanza} from './SimpleStanza';
 import {Observable} from 'rxjs';
-import {Stanza, Element, JID} from 'node-xmpp-core';
-import {MessageType} from '../../models';
+import {Stanza, Element} from 'node-xmpp-core';
 
 /**
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
@@ -40,7 +39,7 @@ export declare class Connection {
 
     public sendPresence(message?: string);
 
-    public sendMessage(to: JID, from: JID, body: string, messageType?: MessageType);
+    public sendMessage(to: string, body: string);
 
     public enableCarbons(): void;
 

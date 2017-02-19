@@ -3,12 +3,11 @@ import {Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/first';
-import {MessageType, Message} from '../../models';
-import {Element, Stanza, createStanza, JID} from 'node-xmpp-core';
+import {Element, Stanza, createStanza} from 'node-xmpp-core';
 import {EventEmitter} from 'events';
 import {Component} from 'node-xmpp-component';
 import {Client} from 'node-xmpp-client';
-import {IQ} from '@xmpp/xml';
+import {IQ, Message} from '@xmpp/xml';
 import {SimpleStanza} from './SimpleStanza';
 import {isNullOrUndefined} from 'util';
 
@@ -101,19 +100,14 @@ export class Connection {
      * Send a direct message/stanza.
      *
      * @param to jid of the recipient
-     * @param from jid of the sender
      * @param body the message body
-     * @param messageType (optional) default is 'chat'
      */
-    public sendMessage(to: JID, from: JID, body: string, messageType?: MessageType) {
-        let type = messageType ? messageType : Message.chat;
-        let reply = createStanza('message', {
-            to: to.toString(),
-            from: from.toString(),
-            type: type
-        });
-        reply.c('body').t(body);
-        this.client.send(reply);
+    public sendMessage(to: string, body: string) {
+        let message = new Message();
+        message.c('body').t(body);
+        message.to = to;
+        message.type = 'chat';
+        this.client.send(message);
     }
 
     public enableCarbons(): void {
@@ -127,7 +121,7 @@ export class Connection {
     }
 
     public getStatusStream(type?: string): Observable<any> {
-        return this.statusSubject.asObservable();
+        return this.statusSubject.asObservable().filter(r => !type || type === r);
     }
 
     public getRawStanzaStream(filter?: MessageFilter): Observable<Stanza> {
@@ -160,7 +154,8 @@ export class Connection {
         this.client.on(Connection.STATUS_CONNECT, () => this.statusSubject.next(Connection.STATUS_CONNECT));
         this.client.on(Connection.STATUS_RECONNECT, () => this.statusSubject.next(Connection.STATUS_RECONNECT));
         this.client.on(Connection.STATUS_DISCONNECT, () => this.statusSubject.next(Connection.STATUS_DISCONNECT));
-        this.client.on(Connection.STATUS_ERROR, () => this.statusSubject.next(Connection.STATUS_ERROR));
+        // this.client.on(Connection.STATUS_ERROR, (r) => this.statusSubject.next(Connection.STATUS_ERROR));
+        this.client.on(Connection.STATUS_ERROR, (r, t) => console.log(r, t));
     }
 }
 
