@@ -132,15 +132,21 @@ export class Connection {
 
     public getRawStanzaStream(filter?: MessageFilter): Observable<Stanza> {
         return this.rawStanzaSubject
-            .filter(r => filterType(r, filter.type))
-            .filter(r => filterMessageType(r, filter.messageType));
+            .filter(r => !filter || !filter.type || r.is(filter.type))
+            .filter(r => !filter || !filter.messageType || r.type === filter.messageType);
     }
 
     public getSimpleStanzaStream(filter?: MessageFilter): Observable<SimpleStanza> {
         return this.getRawStanzaStream(filter).map(toSimple)
-            .filter(r => filterForwarded(r, filter.forwarded))
-            .filter(r => filterComposing(r, filter.composing))
-            .filter(r => filterPaused(r, filter.paused));
+            .filter(r => !r.composing && !r.paused);
+    }
+
+    public getSimpleComposingStream(): Observable<SimpleStanza> {
+        return this.getRawStanzaStream().map(toSimple).filter(r => r.composing);
+    }
+
+    public getSimplePausedStream(): Observable<SimpleStanza> {
+        return this.getRawStanzaStream().map(toSimple).filter(r => r.paused);
     }
 
     /**

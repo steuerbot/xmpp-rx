@@ -3,11 +3,11 @@ import {Connection} from '../connection/Connection';
 
 let jid = 'beta_bot.steuerbot.com';
 
-// let con = ConnectionBuilder.ofTypeClient()
-//     .withCredentials('marc@steuerbot.com/resource_3', 'marc')
-//     .setAutoConnect(false)
-//     .build();
-let con = ConnectionBuilder.ofTypeComponent().withCredentials(jid, 'beta_bot', 'steuerbot.com', 5226).build();
+let con = ConnectionBuilder.ofTypeClient()
+    .withCredentials('marc@steuerbot.com/resource_3', 'marc')
+    // .setAutoConnect(false)
+    .build();
+// let con = ConnectionBuilder.ofTypeComponent().withCredentials(jid, 'beta_bot', 'steuerbot.com', 5226).build();
 
 // con.connect().subscribe(r => {
 //     console.log('online');
