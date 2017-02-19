@@ -9,13 +9,13 @@ let con = ConnectionBuilder.ofTypeClient()
     .build();
 // let con = ConnectionBuilder.ofTypeComponent().withCredentials(jid, 'beta_bot', 'steuerbot.com', 5226).build();
 
-// con.connect().subscribe(r => {
-//     console.log('online');
-//     con.sendPresence('ypypypyp');
-//     con.enableCarbons();
-// });
+con.connect().subscribe(r => {
+    console.log('online');
+    con.sendPresence('ypypypyp');
+    con.enableCarbons();
+});
 
 con.getStatusStream().subscribe(console.log);
 
 con.getSimpleStanzaStream({type: Connection.TYPE_MESSAGE})
-    .subscribe(r => console.log(`type: ${r.type} composing: ${r.composing} paused: ${r.paused} body: ${r.body}`));
+    .subscribe(r => console.log(`from: ${r.from} - type: ${r.type} - composing: ${r.composing} - paused: ${r.paused} - body: ${r.body}`));

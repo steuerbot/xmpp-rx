@@ -57,12 +57,14 @@ export class SimpleStanza {
         let f = s ? s : r;
         this._forwarded = !!f;
 
+        let m = this.rawStanza;
         if (f && f.getChild('forwarded') && f.getChild('forwarded').getChild('message')) {
-            this.rawStanza = f.getChild('forwarded').getChild('message') as Stanza;
+            m = f.getChild('forwarded').getChild('message') as Stanza;
+            this.rawStanza.from = m.getAttr('from');
         }
 
-        this._body = this.rawStanza.getChildText('body');
-        this._componsing = !!this.rawStanza.getChild('composing');
-        this._paused = !!this.rawStanza.getChild('paused');
+        this._body = m.getChildText('body');
+        this._componsing = !!m.getChild('composing');
+        this._paused = !!m.getChild('paused');
     }
 }

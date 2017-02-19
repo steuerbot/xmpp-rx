@@ -3,9 +3,8 @@ import {Component} from 'node-xmpp-component';
 import {Client} from 'node-xmpp-client';
 import {SimpleStanza} from './SimpleStanza';
 import {Observable} from 'rxjs';
-import {Stanza} from '@xmpp/xml';
+import {Stanza, Element, JID} from 'node-xmpp-core';
 import {MessageType} from '../../models';
-import {JID} from '@xmpp/jid';
 
 /**
  * Represents a XmppConnection. Wraps the base node-xmpp-client library.
