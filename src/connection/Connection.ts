@@ -20,7 +20,7 @@ export interface MessageFilter {
     paused?: boolean;
 }
 
-export interface XmppClient extends EventEmitter {
+interface XmppClient extends EventEmitter {
     send(stanza: Element): void;
 
     // component methods
@@ -54,13 +54,13 @@ export class Connection {
     private rawStanzaSubject: Subject<Stanza> = new Subject();
     private statusSubject: Subject<string> = new Subject();
 
-    static createComponentConnection(component: Component) {
+    static createComponentConnection(component: Component): Connection {
         let con = new Connection(component);
         con.connectionType = 'component';
         return con;
     }
 
-    static createClientConnection(client: Client) {
+    static createClientConnection(client: Client): Connection {
         let con = new Connection(client);
         con.connectionType = 'client';
         return con;
