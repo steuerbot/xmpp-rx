@@ -3,11 +3,10 @@ import {Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/first';
-import {Element, Stanza, createStanza} from 'node-xmpp-core';
+import {Element, Stanza, createStanza, IQ, Message} from 'node-xmpp-core';
 import {EventEmitter} from 'events';
 import {Component} from 'node-xmpp-component';
 import {Client} from 'node-xmpp-client';
-import {IQ, Message} from '@xmpp/xml';
 import {SimpleStanza} from './SimpleStanza';
 import {isNullOrUndefined} from 'util';
 

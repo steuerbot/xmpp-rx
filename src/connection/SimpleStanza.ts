@@ -63,7 +63,7 @@ export class SimpleStanza {
             this.rawStanza.from = m.getAttr('from');
         }
 
-        this._body = m.getChildText('body');
+        this._body = m.getChildText('body', undefined);
         this._componsing = !!m.getChild('composing');
         this._paused = !!m.getChild('paused');
     }

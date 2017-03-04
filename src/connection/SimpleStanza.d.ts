@@ -1,4 +1,4 @@
-import {Stanza} from 'node-xmpp-core';
+import {Stanza} from '@steuerbot/types/node-xmpp-core';
 
 export declare class SimpleStanza {
     from: string;
