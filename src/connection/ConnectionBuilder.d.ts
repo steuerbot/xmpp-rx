@@ -1,8 +1,8 @@
-import {ComponentOptionBuilder} from './ComponentOptionBuilder';
-import {ClientOptionBuilder} from './ClientOptionBuilder';
-import {Connection} from './Connection';
-import {Options as ComponentOptions} from 'node-xmpp-component';
-import {Options as ClientOptions} from 'node-xmpp-Client';
+import { ComponentOptionBuilder } from './ComponentOptionBuilder';
+import { ClientOptionBuilder } from './ClientOptionBuilder';
+import { Connection } from './Connection';
+import { Options as ComponentOptions } from 'node-xmpp-component';
+import { Options as ClientOptions } from 'node-xmpp-client';
 
 /**
  * Created by marcneumann on 19.02.17.

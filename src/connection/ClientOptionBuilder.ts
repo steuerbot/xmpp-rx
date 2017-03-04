@@ -1,5 +1,5 @@
-import {Options} from 'node-xmpp-client';
 import {Connection} from './Connection';
+import {Options} from '@steuerbot/types/node-xmpp-client';
 
 /**
  * Created by marcneumann on 18.02.17.

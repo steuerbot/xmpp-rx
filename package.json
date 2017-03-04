@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/node": "^7.0.5",
     "@steuerbot/types": "latest",
+    "@steuerbot/node-xmpp-client": "latest",
     "node-xmpp-client": "^3.1.3",
     "node-xmpp-component": "latest",
     "rxjs": "^5.0.3"
