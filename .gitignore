@@ -2,8 +2,7 @@
 logs
 *.log
 npm-debug.log*
-*.js
-*.js.map
+dist
 
 # IDEs and editors
 /.idea
