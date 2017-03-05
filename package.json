@@ -1,6 +1,6 @@
 {
   "name": "@steuerbot/xmpp-rx",
-  "version": "1.1.13",
+  "version": "1.1.15",
   "description": "Simple rx-wrapper around the popular node-xmpp-client library.",
   "main": "index.js",
   "scripts": {
@@ -18,13 +18,15 @@
   "homepage": "https://github.com/steuerbot/xmpp-rx#readme",
   "dependencies": {
     "node-xmpp-client": "^3.1.3",
+    "@steuerbot/node-xmpp-client": "latest",
     "node-xmpp-core": "latest",
+    "@steuerbot/node-xmpp-core": "latest",
     "node-xmpp-component": "latest",
+    "@steuerbot/node-xmpp-component": "latest",
+    "@steuerbot/ltx": "latest",
     "rxjs": "^5.0.3"
   },
   "devDependencies": {
-    "@types/node": "^7.0.5",
-    "@types/ltx": "latest",
-    "@steuerbot/types": "latest"
+    "@types/node": "^7.0.5"
   }
 }

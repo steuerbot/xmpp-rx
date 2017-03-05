@@ -1,5 +1,5 @@
-import { Connection } from './Connection';
-import { Options } from '@steuerbot/types/node-xmpp-component';
+import {Connection} from './Connection';
+import {Options} from '../../typings/custom/node-xmpp-component/lib/Component';
 /**
  * Created by marcneumann on 19.02.17.
  */
